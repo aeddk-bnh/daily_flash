@@ -36,7 +36,8 @@ fun NavGraph(
     getAllVideosUseCase: GetAllVideosUseCase,
     getUserSettingsUseCase: com.dailyflash.domain.settings.GetUserSettingsUseCase,
     updateReminderUseCase: com.dailyflash.domain.settings.UpdateReminderUseCase,
-    updateAutoCleanupUseCase: com.dailyflash.domain.settings.UpdateAutoCleanupUseCase
+    updateAutoCleanupUseCase: com.dailyflash.domain.settings.UpdateAutoCleanupUseCase,
+    getStorageLocationUseCase: com.dailyflash.domain.settings.GetStorageLocationUseCase
 ) {
     NavHost(
         navController = navController,
@@ -60,7 +61,8 @@ fun NavGraph(
             val viewModel = com.dailyflash.presentation.settings.SettingsViewModel(
                 getUserSettingsUseCase,
                 updateReminderUseCase,
-                updateAutoCleanupUseCase
+                updateAutoCleanupUseCase,
+                getStorageLocationUseCase
             )
             com.dailyflash.presentation.settings.SettingsScreen(
                 viewModel = viewModel,

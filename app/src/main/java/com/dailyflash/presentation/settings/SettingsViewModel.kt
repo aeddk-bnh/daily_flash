@@ -10,13 +10,18 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.launch
 import java.time.LocalTime
+import com.dailyflash.domain.settings.GetStorageLocationUseCase
 
 class SettingsViewModel(
     getUserSettingsUseCase: GetUserSettingsUseCase,
     private val updateReminderUseCase: UpdateReminderUseCase,
-    private val updateAutoCleanupUseCase: UpdateAutoCleanupUseCase
+    private val updateAutoCleanupUseCase: UpdateAutoCleanupUseCase,
+    getStorageLocationUseCase: GetStorageLocationUseCase
 ) : ViewModel() {
+
+    val storageLocation: String = getStorageLocationUseCase()
 
     val settings: StateFlow<UserSettings> = getUserSettingsUseCase()
         .stateIn(

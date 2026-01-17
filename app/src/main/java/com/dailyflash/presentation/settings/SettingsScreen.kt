@@ -117,6 +117,23 @@ fun SettingsScreen(
                     }
                 }
             }
+            
+            Divider(modifier = Modifier.padding(vertical = 16.dp))
+            
+            // Storage Location
+            Text("Storage Location", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Text(
+                text = "Videos are saved in:",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Text(
+                text = viewModel.storageLocation,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 4.dp)
+            )
         }
     }
 }

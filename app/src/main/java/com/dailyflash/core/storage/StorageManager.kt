@@ -234,4 +234,8 @@ class StorageManager(
         }
         deletedCount
     }
+
+    override fun getStorageLocationDescription(): String {
+        return "${Environment.DIRECTORY_MOVIES}/${StorageConfig.BASE_FOLDER_NAME}"
+    }
 }

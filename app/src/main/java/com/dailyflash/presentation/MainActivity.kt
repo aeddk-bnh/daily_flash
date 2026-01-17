@@ -70,6 +70,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var getUserSettingsUseCase: com.dailyflash.domain.settings.GetUserSettingsUseCase
     private lateinit var updateReminderUseCase: com.dailyflash.domain.settings.UpdateReminderUseCase
     private lateinit var updateAutoCleanupUseCase: com.dailyflash.domain.settings.UpdateAutoCleanupUseCase
+    private lateinit var getStorageLocationUseCase: com.dailyflash.domain.settings.GetStorageLocationUseCase
     
     // Permission state
     private var permissionsGranted by mutableStateOf(false)
@@ -112,6 +113,7 @@ class MainActivity : ComponentActivity() {
         getUserSettingsUseCase = com.dailyflash.domain.settings.GetUserSettingsUseCase(settingsRepository)
         updateReminderUseCase = com.dailyflash.domain.settings.UpdateReminderUseCase(settingsRepository, notificationManager)
         updateAutoCleanupUseCase = com.dailyflash.domain.settings.UpdateAutoCleanupUseCase(settingsRepository)
+        getStorageLocationUseCase = com.dailyflash.domain.settings.GetStorageLocationUseCase(storageManager)
         
         captureVideoUseCase = CaptureVideoUseCase(videoRepository)
         getCalendarDataUseCase = GetCalendarDataUseCase(videoRepository)
@@ -141,7 +143,8 @@ class MainActivity : ComponentActivity() {
                             getAllVideosUseCase = getAllVideosUseCase,
                             getUserSettingsUseCase = getUserSettingsUseCase,
                             updateReminderUseCase = updateReminderUseCase,
-                            updateAutoCleanupUseCase = updateAutoCleanupUseCase
+                            updateAutoCleanupUseCase = updateAutoCleanupUseCase,
+                            getStorageLocationUseCase = getStorageLocationUseCase
                         )
                     }
                     showPermissionDenied -> {

@@ -65,4 +65,10 @@ interface IStorageManager {
      * @return Number of videos deleted
      */
     suspend fun deleteVideosOlderThan(date: LocalDate): Int
+    
+    /**
+     * Get a user-friendly description of where videos are stored.
+     * @return String description of storage path (e.g. "Movies/DailyFlash")
+     */
+    fun getStorageLocationDescription(): String
 }
