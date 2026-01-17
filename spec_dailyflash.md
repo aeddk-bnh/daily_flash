@@ -58,8 +58,8 @@ Provide a minimal Android application for capturing 1-second daily video moments
     *   `sizeBytes`: Long
 
 ### 4.2 Core Workflows
-1.  **Capture Flow:** User Taps Record -> CameraService records 1s -> Saves to `Android/data/.../DailyFlash/YYYY/MM/DD/`.
-2.  **Export Flow:** User Selects Range -> User Selects Audio (Optional) -> Transformer stitches clips -> Saves to Gallery -> Share Sheet opens.
+1.  **Capture Flow:** User Taps Record -> CameraService records 1s -> Saves to public MediaStore in `Movies/DailyFlash/`. Filename: `dailyflash_YYYYMMDD_timestamp.mp4`.
+2.  **Export Flow:** User Selects Range -> User Selects Audio (Optional) -> Transformer stitches clips -> Saves to `Movies/DailyFlash/Exports` -> Share Sheet opens.
 
 ---
 
@@ -71,9 +71,9 @@ Provide a minimal Android application for capturing 1-second daily video moments
 *   **UI:** Jetpack Compose (Material 3).
 
 ### 5.2 Storage & Privacy
-*   **App-Specific Storage:** Used for raw clips to avoid Permission Hell on Android 11+.
+*   **Public Storage (MediaStore):** Used for clips to ensure user accessibility and visibility in standard Gallery apps.
 *   **Local Only:** No `INTERNET` permission in Manifest.
-*   **Privacy Guard:** All raw data resides in `getExternalFilesDir`, accessible only by the app (and user via File Manager).
+*   **Scoped Storage:** Compliant with Android Q+ requirements using `RELATIVE_PATH` in `Movies/DailyFlash`.
 
 ### 5.3 Compatibility
 *   **Emulator Support:** Explicit logic detects emulators and downgrades recording quality to 480p to bypass encoder hardware limitations.
