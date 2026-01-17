@@ -80,8 +80,49 @@ Provide a minimal Android application for capturing 1-second daily video moments
 
 ---
 
-## 6. 📝 Refinement Menu
-*(No pending decisions. The specification reflects the verified, compiled, and tested codebase.)*
+## 6. 📝 MENU TINH CHỈNH (Yêu cầu Quyết định)
+
+Dưới đây là các đề xuất cải tiến để nâng cấp ứng dụng. Vui lòng chọn các phương án bạn muốn đưa vào tài liệu đặc tả chính thức:
+
+### 🛑 VẤN ĐỀ [01]: Trải nghiệm sau khi quay (Post-Capture Experience)
+*Bối cảnh: Hiện tại ứng dụng chỉ hiển thị thông báo "Video saved". Cần cải thiện tính tương tác.*
+
+**Vui lòng chọn một phương án:**
+1.  **Preview tức thời (Instant Preview):** Hiển thị ngay đoạn video vừa quay trong một cửa sổ nhỏ hoặc hiệu ứng chuyển cảnh để người dùng kiểm tra kết quả ngay lập tức.
+    *   *Ưu điểm:* Tăng tính xác thực, người dùng biết ngay video có đạt yêu cầu không.
+2.  **Giữ nguyên hiện tại:** Chỉ hiển thị Toast thông báo.
+
+### 🛑 VẤN ĐỀ [02]: Điều hướng trong Gallery (Gallery Navigation)
+*Bối cảnh: Việc quay lại danh sách để xem từng video có thể gây ngắt quãng.*
+
+**Vui lòng chọn một phương án:**
+1.  **Thao tác vuốt (Swipe to Navigate):** Khi đang xem một video trong Gallery, cho phép vuốt Trái/Phải để chuyển sang clip của ngày tiếp theo hoặc trước đó.
+    *   *Ưu điểm:* Trải nghiệm mượt mà giống như các ứng dụng mạng xã hội hiện đại (TikTok/Reels).
+2.  **Giữ nguyên hiện tại:** Quay lại lưới (Grid) để chọn video khác.
+
+### 🛑 VẤN ĐỀ [03]: Tính năng Nhắc nhở & Giữ chân người dùng (Engagement)
+*Bối cảnh: Người dùng dễ quên quay phim hàng ngày, làm đứt quãng hành trình.*
+
+**Vui lòng chọn một phương án:**
+1.  **Nhắc nhở & Streaks:** Gửi thông báo đẩy (Push Notification) vào giờ cố định và hiển thị số ngày quay liên tiếp (Streaks) để tạo động lực.
+    *   *Ưu điểm:* Tăng tỷ lệ giữ chân người dùng (Retention).
+2.  **Không nhắc nhở:** Giữ ứng dụng ở mức tối giản nhất.
+
+### 🛑 VẤN ĐỀ [04]: Nâng cấp Bộ máy Export (Advanced Export)
+*Bối cảnh: Video xuất ra hiện tại khá đơn giản.*
+
+**Vui lòng chọn một phương án:**
+1.  **Export nâng cao:** Cho phép chèn Text Overlay (ngày tháng) lên từng clip, tùy chỉnh thứ tự video, và thêm hiệu ứng âm thanh (fade-in/out) cho nhạc nền.
+    *   *Ưu điểm:* Sản phẩm cuối cùng chuyên nghiệp hơn để chia sẻ.
+2.  **Giữ nguyên hiện tại:** Ghép nối đơn giản các clip theo thời gian.
+
+### 🛑 VẤN ĐỀ [05]: Tự động hóa Quản lý Dung lượng (Storage Management)
+*Bối cảnh: Các clip thô (1s) có thể tích tụ làm đầy bộ nhớ.*
+
+**Vui lòng chọn một phương án:**
+1.  **Tự động dọn dẹp:** Tùy chọn tự động xóa các clip thô sau khi người dùng đã Export thành công video tổng hợp của tháng hoặc năm.
+    *   *Ưu điểm:* Tiết kiệm dung lượng lưu trữ cho người dùng.
+2.  **Giữ nguyên hiện tại:** Người dùng tự quản lý hoặc xóa thủ công.
 
 ---
 
