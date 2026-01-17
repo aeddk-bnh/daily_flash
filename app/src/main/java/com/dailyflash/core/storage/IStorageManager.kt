@@ -58,4 +58,11 @@ interface IStorageManager {
      * @return Created temporary file
      */
     fun createTempFile(prefix: String, suffix: String): java.io.File
+
+    /**
+     * Delete all videos older than the specified date.
+     * @param date Cutoff date (exclusive)
+     * @return Number of videos deleted
+     */
+    suspend fun deleteVideosOlderThan(date: LocalDate): Int
 }

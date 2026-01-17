@@ -16,8 +16,18 @@ import androidx.media3.transformer.ExportException
 import androidx.media3.transformer.ExportResult
 import androidx.media3.transformer.ProgressHolder
 import androidx.media3.transformer.Transformer
+import androidx.media3.effect.OverlayEffect
+import androidx.media3.effect.TextOverlay
+import androidx.media3.common.Effect
+import androidx.media3.transformer.Effects
+import android.graphics.Color
+import android.text.SpannableString
+import android.text.Spanned
+import android.text.style.ForegroundColorSpan
+import com.google.common.collect.ImmutableList
 import com.dailyflash.core.logging.FlowLogger
 import com.dailyflash.core.storage.IStorageManager
+import com.dailyflash.domain.ExportOptions
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
@@ -44,6 +54,7 @@ class MediaProcessor(
         clips: List<Uri>,
         outputUri: Uri,
         audioTrack: Uri?,
+        options: ExportOptions, // Added parameter
         onProgress: (Float) -> Unit
     ): Result<Uri> = withContext(Dispatchers.Main) {
         FlowLogger.flow("StitchingStart", "clipCount=${clips.size}, hasAudio=${audioTrack != null}")
@@ -115,7 +126,32 @@ class MediaProcessor(
                 // Create EditedMediaItem for each clip
                 val editedMediaItems = clips.map { clipUri ->
                     val mediaItem = MediaItem.fromUri(clipUri)
-                    EditedMediaItem.Builder(mediaItem).build()
+                    
+                    val effects = mutableListOf<Effect>()
+                    
+                    if (options.includeDateOverlay && options.dateText != null) {
+                        try {
+                            val spannable = SpannableString(options.dateText)
+                            spannable.setSpan(
+                                ForegroundColorSpan(Color.WHITE),
+                                0,
+                                spannable.length,
+                                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                            )
+                            
+                            // Create text overlay
+                            val textOverlay = TextOverlay.createStaticTextOverlay(spannable)
+                            val overlayEffect = OverlayEffect(ImmutableList.of(textOverlay))
+                            effects.add(overlayEffect)
+                        } catch (e: Exception) {
+                            FlowLogger.error("EffectError", e, "Failed to add text overlay")
+                        }
+                    }
+
+
+                    EditedMediaItem.Builder(mediaItem)
+                        .setEffects(Effects(ImmutableList.of(), effects))
+                        .build()
                 }
 
                 // Create video sequence for concatenation

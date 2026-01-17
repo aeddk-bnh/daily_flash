@@ -29,6 +29,12 @@ class CameraViewModel(
     private val _uiState = MutableStateFlow<CameraUiState>(CameraUiState.Idle)
     val uiState: StateFlow<CameraUiState> = _uiState.asStateFlow()
 
+    private val _torchEnabled = MutableStateFlow(false)
+    val torchEnabled: StateFlow<Boolean> = _torchEnabled.asStateFlow()
+
+    private val _recordingProgress = MutableStateFlow(0f)
+    val recordingProgress: StateFlow<Float> = _recordingProgress.asStateFlow()
+
     fun bindToLifecycle(lifecycleOwner: LifecycleOwner) {
         cameraService.bindToLifecycle(lifecycleOwner)
     }
@@ -42,18 +48,37 @@ class CameraViewModel(
 
         viewModelScope.launch {
             _uiState.update { CameraUiState.Recording(0) }
+            _recordingProgress.value = 0f
             
+            // Side job for progress animation
+            val progressJob = viewModelScope.launch {
+                val startTime = System.currentTimeMillis()
+                while (System.currentTimeMillis() - startTime < 1000) {
+                    _recordingProgress.value = (System.currentTimeMillis() - startTime) / 1000f
+                    kotlinx.coroutines.delay(16)
+                }
+                _recordingProgress.value = 1f
+            }
+
             // Record for 1 second (Project constraint)
             cameraService.recordClip(1000)
                 .fold(
                     onSuccess = { uri ->
+                        progressJob.cancel()
                         saveVideo(uri)
                     },
                     onFailure = { error ->
+                        progressJob.cancel()
                         _uiState.update { CameraUiState.Error(error.message ?: "Recording failed") }
                     }
                 )
         }
+    }
+
+    fun toggleTorch() {
+        val newState = !_torchEnabled.value
+        _torchEnabled.value = newState
+        cameraService.toggleTorch(newState)
     }
 
     private fun saveVideo(uri: Uri) {

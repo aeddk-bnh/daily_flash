@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.media3.transformer.Transformer
 import androidx.test.core.app.ApplicationProvider
 import com.dailyflash.core.storage.IStorageManager
+import com.dailyflash.domain.ExportOptions
 import com.dailyflash.util.MainDispatcherRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
@@ -46,8 +47,11 @@ class MediaProcessorTest {
         val result = mediaProcessor.stitchVideos(
             clips = emptyList(),
             outputUri = outputUri,
-            onProgress = {}
-        )
+            audioTrack = null, // Assuming audioTrack can be null for this test case
+            options = ExportOptions()
+        ) {
+            // progress
+        }
         assertTrue(result.isFailure)
     }
 }

@@ -223,4 +223,15 @@ class StorageManager(
             throw e
         }
     }
+
+    override suspend fun deleteVideosOlderThan(date: LocalDate): Int = withContext(Dispatchers.IO) {
+        val oldVideos = getAllVideos().filter { it.date.isBefore(date) }
+        var deletedCount = 0
+        oldVideos.forEach { video ->
+            if (deleteVideo(video.uri)) {
+                deletedCount++
+            }
+        }
+        deletedCount
+    }
 }

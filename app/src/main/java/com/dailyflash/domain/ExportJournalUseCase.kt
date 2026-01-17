@@ -28,7 +28,8 @@ class ExportJournalUseCase(
      */
     operator fun invoke(
         dateRange: ClosedRange<LocalDate>,
-        audioTrack: Uri? = null
+        audioTrack: Uri? = null,
+        options: ExportOptions = ExportOptions()
     ): Flow<ExportProgress> = channelFlow {
         send(ExportProgress.Idle)
 
@@ -50,6 +51,7 @@ class ExportJournalUseCase(
             clips = clips.map { it.uri },
             outputUri = tempUri,
             audioTrack = audioTrack,
+            options = options,
             onProgress = { progress ->
                 trySend(ExportProgress.Processing(progress))
             }

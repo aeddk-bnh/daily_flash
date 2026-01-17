@@ -12,12 +12,18 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Collections
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.FlashOn
+import androidx.compose.material.icons.filled.FlashOff
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -39,11 +45,14 @@ import com.dailyflash.presentation.theme.AppColors
 fun CameraScreen(
     viewModel: CameraViewModel,
     onNavigateToGallery: () -> Unit,
-    onNavigateToCalendar: () -> Unit
+    onNavigateToCalendar: () -> Unit,
+    onNavigateToSettings: () -> Unit
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
     val context = androidx.compose.ui.platform.LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
+    val torchEnabled by viewModel.torchEnabled.collectAsState()
+    val recordingProgress by viewModel.recordingProgress.collectAsState()
 
     LaunchedEffect(lifecycleOwner) {
         viewModel.bindToLifecycle(lifecycleOwner)
@@ -56,8 +65,42 @@ fun CameraScreen(
             modifier = Modifier.fillMaxSize()
         )
 
-        // Overlay Controls
-    LaunchedEffect(uiState) {
+        // Overlay Controls (Top)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            // Torch Toggle
+            IconButton(
+                onClick = { viewModel.toggleTorch() },
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .background(Color.Black.copy(alpha = 0.4f), CircleShape)
+            ) {
+                Icon(
+                    imageVector = if (torchEnabled) Icons.Default.FlashOn else Icons.Default.FlashOff,
+                    contentDescription = "Torch",
+                    tint = if (torchEnabled) Color.Yellow else Color.White
+                )
+            }
+
+            // Settings
+            IconButton(
+                onClick = onNavigateToSettings,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .background(Color.Black.copy(alpha = 0.4f), CircleShape)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Settings,
+                    contentDescription = "Settings",
+                    tint = Color.White
+                )
+            }
+        }
+
+        LaunchedEffect(uiState) {
         if (uiState is CameraUiState.Success) {
             android.widget.Toast.makeText(
                 context,
@@ -84,25 +127,23 @@ fun CameraScreen(
                     modifier = Modifier
                         .align(Alignment.CenterStart)
                         .padding(start = 16.dp)
-                        .size(48.dp)
-                        .background(color = AppColors.SurfaceVariant.copy(alpha = 0.6f), shape = CircleShape)
+                        .size(56.dp)
+                        .background(color = Color.Black.copy(alpha = 0.3f), shape = CircleShape)
                 ) {
                     Icon(
                         imageVector = Icons.Default.DateRange,
                         contentDescription = "Calendar",
-                        tint = AppColors.OnSurface
+                        tint = Color.White
                     )
                 }
 
                 // Shutter Button (Center)
                 Box(modifier = Modifier.align(Alignment.Center)) {
-                    if (uiState is CameraUiState.Recording) {
-                        RecordingTimer()
-                    } else {
-                        ShutterButton(
-                            onClick = { viewModel.startRecording() }
-                        )
-                    }
+                    ShutterButton(
+                        onClick = { viewModel.startRecording() },
+                        isRecording = uiState is CameraUiState.Recording,
+                        progress = recordingProgress
+                    )
                 }
 
                 // Gallery Button (Right)
@@ -111,13 +152,13 @@ fun CameraScreen(
                     modifier = Modifier
                         .align(Alignment.CenterEnd)
                         .padding(end = 16.dp)
-                        .size(48.dp)
-                        .background(color = AppColors.SurfaceVariant.copy(alpha = 0.6f), shape = CircleShape)
+                        .size(56.dp)
+                        .background(color = Color.Black.copy(alpha = 0.3f), shape = CircleShape)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Collections,
                         contentDescription = "Gallery",
-                        tint = AppColors.OnSurface
+                        tint = Color.White
                     )
                 }
             }
@@ -126,17 +167,42 @@ fun CameraScreen(
 }
 
 @Composable
-fun ShutterButton(onClick: () -> Unit) {
-    IconButton(
-        onClick = onClick,
+fun ShutterButton(
+    onClick: () -> Unit,
+    isRecording: Boolean,
+    progress: Float
+) {
+    Box(
         modifier = Modifier
-            .size(72.dp)
-            .border(4.dp, Color.White, CircleShape)
-            .padding(4.dp)
-            .clip(CircleShape)
-            .background(AppColors.RecordRed)
+            .size(80.dp)
+            .clickable(onClick = onClick, enabled = !isRecording),
+        contentAlignment = Alignment.Center
     ) {
-        // Inner circle
+        // Progress Ring
+        if (isRecording) {
+            CircularProgressIndicator(
+                progress = progress,
+                modifier = Modifier.fillMaxSize(),
+                color = AppColors.RecordRed,
+                strokeWidth = 4.dp,
+                trackColor = Color.White.copy(alpha = 0.3f)
+            )
+        } else {
+            // Static outer ring
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .border(4.dp, Color.White, CircleShape)
+            )
+        }
+
+        // Inner Red Circle
+        Box(
+            modifier = Modifier
+                .size(if (isRecording) 40.dp else 60.dp)
+                .clip(if (isRecording) RoundedCornerShape(4.dp) else CircleShape)
+                .background(AppColors.RecordRed)
+        )
     }
 }
 

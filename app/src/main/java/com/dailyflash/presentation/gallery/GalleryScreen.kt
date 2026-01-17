@@ -29,17 +29,10 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun GalleryScreen(
     viewModel: GalleryViewModel,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onNavigateToDetail: (Int) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    var selectedVideoUri by remember { mutableStateOf<android.net.Uri?>(null) }
-
-    if (selectedVideoUri != null) {
-        VideoPlayerDialog(
-            videoUri = selectedVideoUri!!,
-            onDismiss = { selectedVideoUri = null }
-        )
-    }
 
     DailyFlashScaffold(
         topBar = {
@@ -74,7 +67,10 @@ fun GalleryScreen(
                     } else {
                         VideoGrid(
                             videos = state.videos,
-                            onVideoClick = { selectedVideoUri = it.uri }
+                            onVideoClick = { video -> 
+                                val index = state.videos.indexOf(video)
+                                if (index != -1) onNavigateToDetail(index)
+                            }
                         )
                     }
                 }

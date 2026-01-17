@@ -19,10 +19,9 @@ interface IMediaProcessor {
     suspend fun stitchVideos(
         clips: List<Uri>,
         outputUri: Uri,
-        audioTrack: Uri? = null,
-        enableFade: Boolean = false,
-        textOverlay: (index: Int) -> String? = { null },
-        onProgress: (Float) -> Unit = {}
+        audioTrack: Uri?,
+        options: com.dailyflash.domain.ExportOptions,
+        onProgress: (Float) -> Unit
     ): Result<Uri>
     
     /**

@@ -33,4 +33,10 @@ interface ICameraService {
      * Release camera resources.
      */
     fun release()
+
+    /**
+     * Toggle camera torch/flash.
+     * @param enabled True to turn on, false to turn off
+     */
+    fun toggleTorch(enabled: Boolean)
 }

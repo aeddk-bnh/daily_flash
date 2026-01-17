@@ -46,6 +46,7 @@ class CameraService(
     private var preview: Preview? = null
     private var activeRecording: Recording? = null
     private var lifecycleOwner: LifecycleOwner? = null
+    private var camera: androidx.camera.core.Camera? = null
 
     /**
      * Bind camera to lifecycle owner.
@@ -100,7 +101,7 @@ class CameraService(
                 cameraProvider?.unbindAll()
 
                 // 5. Bind to lifecycle with both use cases
-                cameraProvider?.bindToLifecycle(
+                camera = cameraProvider?.bindToLifecycle(
                     owner,
                     cameraSelector,
                     preview,
@@ -291,6 +292,15 @@ class CameraService(
         lifecycleOwner = null
 
         Log.d(TAG, "Camera resources released")
+    }
+
+    override fun toggleTorch(enabled: Boolean) {
+        val provider = cameraProvider ?: return
+        // We need to access the camera object to control torch
+        // Camera is bound in bindToLifecycle, but we don't store it.
+        // Let's modify bindToLifecycle to store the camera object or re-bind.
+        // Better: store the camera object.
+        camera?.cameraControl?.enableTorch(enabled)
     }
 
     /**

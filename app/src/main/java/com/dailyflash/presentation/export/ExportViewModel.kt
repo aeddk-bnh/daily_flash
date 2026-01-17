@@ -17,7 +17,9 @@ sealed interface ExportUiState {
     data class Idle(
         val startDate: LocalDate = LocalDate.now().minusDays(30),
         val endDate: LocalDate = LocalDate.now(),
-        val audioTrack: Uri? = null
+        val audioTrack: Uri? = null,
+        val includeDateOverlay: Boolean = false,
+        val fadeAudio: Boolean = false
     ) : ExportUiState
     
     data class Processing(val progress: Float) : ExportUiState
@@ -49,6 +51,20 @@ class ExportViewModel(
             }
         }
     }
+    
+    fun toggleDateOverlay(enabled: Boolean) {
+        val currentState = _uiState.value
+        if (currentState is ExportUiState.Idle) {
+            _uiState.update { currentState.copy(includeDateOverlay = enabled) }
+        }
+    }
+    
+    fun toggleFadeAudio(enabled: Boolean) {
+        val currentState = _uiState.value
+        if (currentState is ExportUiState.Idle) {
+            _uiState.update { currentState.copy(fadeAudio = enabled) }
+        }
+    }
 
     fun startExport() {
         val state = _uiState.value as? ExportUiState.Idle ?: return
@@ -58,10 +74,17 @@ class ExportViewModel(
             _uiState.update { ExportUiState.Error("Invalid date range") }
             return
         }
+        
+        val options = com.dailyflash.domain.ExportOptions(
+            includeDateOverlay = state.includeDateOverlay,
+            fadeAudio = state.fadeAudio,
+            dateText = if (state.includeDateOverlay) "Date Overlay" else null // Placeholder logic for now, ideally derived from clip date which requires per-clip logic in MediaProcessor
+        )
 
         exportJournalUseCase(
             dateRange = state.startDate..state.endDate,
-            audioTrack = state.audioTrack
+            audioTrack = state.audioTrack,
+            options = options
         ).onEach { progress ->
             when (progress) {
                 is ExportProgress.Idle -> {} // No-op

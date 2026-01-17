@@ -36,10 +36,18 @@ import com.dailyflash.presentation.theme.DailyFlashTheme
 class MainActivity : ComponentActivity() {
     
     // Required permissions for the app
-    private val requiredPermissions = arrayOf(
-        Manifest.permission.CAMERA,
-        Manifest.permission.RECORD_AUDIO
-    )
+    private val requiredPermissions = if (android.os.Build.VERSION.SDK_INT >= 33) {
+        arrayOf(
+            Manifest.permission.CAMERA,
+            Manifest.permission.RECORD_AUDIO,
+            Manifest.permission.POST_NOTIFICATIONS
+        )
+    } else {
+        arrayOf(
+            Manifest.permission.CAMERA,
+            Manifest.permission.RECORD_AUDIO
+        )
+    }
     
     // Dependencies
     private lateinit var storageManager: StorageManager
@@ -54,6 +62,15 @@ class MainActivity : ComponentActivity() {
     private lateinit var deleteClipUseCase: com.dailyflash.domain.DeleteClipUseCase
     private lateinit var getAllVideosUseCase: com.dailyflash.domain.GetAllVideosUseCase
     
+    // Settings Dependencies
+    private lateinit var settingsDataStore: com.dailyflash.core.settings.SettingsDataStore
+    private lateinit var settingsRepository: com.dailyflash.data.settings.SettingsRepositoryImpl
+    private lateinit var notificationManager: com.dailyflash.core.notification.DailyNotificationManager
+    
+    private lateinit var getUserSettingsUseCase: com.dailyflash.domain.settings.GetUserSettingsUseCase
+    private lateinit var updateReminderUseCase: com.dailyflash.domain.settings.UpdateReminderUseCase
+    private lateinit var updateAutoCleanupUseCase: com.dailyflash.domain.settings.UpdateAutoCleanupUseCase
+    
     // Permission state
     private var permissionsGranted by mutableStateOf(false)
     private var showPermissionDenied by mutableStateOf(false)
@@ -62,17 +79,19 @@ class MainActivity : ComponentActivity() {
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
-        val allGranted = permissions.entries.all { it.value }
+        val allGranted = permissions.entries.all { it.value } // Simplified check
         if (allGranted) {
             permissionsGranted = true
             showPermissionDenied = false
         } else {
-            showPermissionDenied = true
-            Toast.makeText(
-                this,
-                "Camera and microphone permissions are required",
-                Toast.LENGTH_LONG
-            ).show()
+            // Check essential permissions
+            val camera = permissions[Manifest.permission.CAMERA] ?: false
+            val audio = permissions[Manifest.permission.RECORD_AUDIO] ?: false
+            if (!camera || !audio) {
+                showPermissionDenied = true
+            } else {
+                permissionsGranted = true // Notification perm might be denied but app can work
+            }
         }
     }
     
@@ -85,11 +104,23 @@ class MainActivity : ComponentActivity() {
         videoRepository = VideoRepositoryImpl(storageManager, contentResolver)
         mediaProcessor = MediaProcessor(this, storageManager)
         
+        // Settings Init
+        settingsDataStore = com.dailyflash.core.settings.SettingsDataStore(this)
+        settingsRepository = com.dailyflash.data.settings.SettingsRepositoryImpl(settingsDataStore)
+        notificationManager = com.dailyflash.core.notification.DailyNotificationManager(this)
+        
+        getUserSettingsUseCase = com.dailyflash.domain.settings.GetUserSettingsUseCase(settingsRepository)
+        updateReminderUseCase = com.dailyflash.domain.settings.UpdateReminderUseCase(settingsRepository, notificationManager)
+        updateAutoCleanupUseCase = com.dailyflash.domain.settings.UpdateAutoCleanupUseCase(settingsRepository)
+        
         captureVideoUseCase = CaptureVideoUseCase(videoRepository)
         getCalendarDataUseCase = GetCalendarDataUseCase(videoRepository)
         exportJournalUseCase = ExportJournalUseCase(videoRepository, mediaProcessor, storageManager)
         deleteClipUseCase = com.dailyflash.domain.DeleteClipUseCase(videoRepository)
         getAllVideosUseCase = com.dailyflash.domain.GetAllVideosUseCase(videoRepository)
+        
+        // Schedule auto-cleanup
+        com.dailyflash.core.storage.CleanupWorker.schedule(this)
         
         // Check existing permissions
         checkPermissions()
@@ -107,7 +138,10 @@ class MainActivity : ComponentActivity() {
                             getCalendarDataUseCase = getCalendarDataUseCase,
                             exportJournalUseCase = exportJournalUseCase,
                             deleteClipUseCase = deleteClipUseCase,
-                            getAllVideosUseCase = getAllVideosUseCase
+                            getAllVideosUseCase = getAllVideosUseCase,
+                            getUserSettingsUseCase = getUserSettingsUseCase,
+                            updateReminderUseCase = updateReminderUseCase,
+                            updateAutoCleanupUseCase = updateAutoCleanupUseCase
                         )
                     }
                     showPermissionDenied -> {

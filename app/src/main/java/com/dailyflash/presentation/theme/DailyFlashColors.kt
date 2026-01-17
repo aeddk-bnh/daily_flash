@@ -64,6 +64,8 @@ object AppColors {
     
     // Overlay
     val Scrim = Color(0x99000000)
+    val GlassSurface = Color(0x661E293B)
+    val GlassBorder = Color(0x33FFFFFF)
     val CardGradientStart = Color(0xFF1E293B)
     val CardGradientEnd = Color(0xFF0F172A)
 }

@@ -2,15 +2,13 @@ package com.dailyflash.presentation.gallery
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.dailyflash.domain.DeleteClipUseCase
 import com.dailyflash.domain.GetAllVideosUseCase
 import com.dailyflash.domain.VideoEntity
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 sealed interface GalleryUiState {
     data object Loading : GalleryUiState
@@ -19,7 +17,8 @@ sealed interface GalleryUiState {
 }
 
 class GalleryViewModel(
-    private val getAllVideosUseCase: GetAllVideosUseCase
+    private val getAllVideosUseCase: GetAllVideosUseCase,
+    private val deleteClipUseCase: DeleteClipUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<GalleryUiState>(GalleryUiState.Loading)
@@ -30,13 +29,24 @@ class GalleryViewModel(
     }
 
     private fun loadVideos() {
-        getAllVideosUseCase()
-            .onEach { videos ->
-                _uiState.update { GalleryUiState.Success(videos) }
+        viewModelScope.launch {
+            try {
+                getAllVideosUseCase().collect { videos ->
+                    _uiState.value = GalleryUiState.Success(videos)
+                }
+            } catch (e: Exception) {
+                _uiState.value = GalleryUiState.Error(e.message ?: "Failed to load videos")
             }
-            .catch { error ->
-                _uiState.update { GalleryUiState.Error(error.message ?: "Unknown error") }
+        }
+    }
+    
+    fun deleteVideo(video: VideoEntity) {
+        viewModelScope.launch {
+            try {
+                deleteClipUseCase(video.id)
+            } catch (e: Exception) {
+                // error handling
             }
-            .launchIn(viewModelScope)
+        }
     }
 }

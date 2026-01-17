@@ -47,6 +47,13 @@ import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.TextStyle
 import java.util.Locale
+import coil.compose.AsyncImage
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.runtime.remember
 
 @Composable
 fun CalendarScreen(
@@ -199,7 +206,7 @@ fun CalendarGrid(
             
             DayCell(
                 date = date,
-                hasVideo = video != null,
+                video = video,
                 onClick = { onDayClick(video) }
             )
         }
@@ -209,14 +216,23 @@ fun CalendarGrid(
 @Composable
 fun DayCell(
     date: LocalDate,
-    hasVideo: Boolean,
+    video: VideoEntity?,
     onClick: () -> Unit
 ) {
     val isToday = date == LocalDate.now()
+    val hasVideo = video != null
+    
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.9f else 1.0f,
+        label = "day_cell_scale"
+    )
     
     Box(
         modifier = Modifier
             .aspectRatio(1f)
+            .scale(scale)
             .clip(CircleShape)
             .background(
                 if (isToday) AppColors.SurfaceVariant else Color.Transparent
@@ -226,28 +242,28 @@ fun DayCell(
                 color = if (isToday) AppColors.Primary else Color.Transparent,
                 shape = CircleShape
             )
-            .clickable(onClick = onClick),
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick
+            ),
         contentAlignment = Alignment.Center
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = date.dayOfMonth.toString(),
-                style = MaterialTheme.typography.bodyMedium,
-                color = if (hasVideo) AppColors.Primary else AppColors.OnSurface
+        if (video != null) {
+            AsyncImage(
+                model = video.uri,
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+                alpha = 0.6f
             )
-            
-            if (hasVideo) {
-                Spacer(modifier = Modifier.height(4.dp))
-                Box(
-                    modifier = Modifier
-                        .size(6.dp)
-                        .clip(CircleShape)
-                        .background(AppColors.Secondary)
-                )
-            }
         }
+
+        Text(
+            text = date.dayOfMonth.toString(),
+            style = MaterialTheme.typography.bodyMedium,
+            color = if (hasVideo) AppColors.OnPrimary else AppColors.OnSurface,
+            fontWeight = if (hasVideo || isToday) FontWeight.Bold else FontWeight.Normal
+        )
     }
 }
