@@ -20,6 +20,8 @@ interface IMediaProcessor {
         clips: List<Uri>,
         outputUri: Uri,
         audioTrack: Uri? = null,
+        enableFade: Boolean = false,
+        textOverlay: (index: Int) -> String? = { null },
         onProgress: (Float) -> Unit = {}
     ): Result<Uri>
     
