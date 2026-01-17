@@ -29,9 +29,13 @@
 *   **Rationale:** Modern replacement for ffmpeg/MediaMuxer, supports hardware acceleration, concatenation, and audio mixing.
 
 ### 4.3 Storage & Persistence (Data Module)
-*   **Local Storage:** App-Specific Storage (`Context.getExternalFilesDir`)
-*   **Public Gallery:** MediaStore API
-*   **Cache/Metadata:** In-Memory Caching (Current) / Room Database (Future considerations)
+*   **Video Storage:** MediaStore (Public `Movies/DailyFlash`)
+*   **Preferences:** Jetpack DataStore (Proto/Preferences) for Settings & Streaks.
+*   **Cache:** In-Memory Caching
+
+### 4.4 Background Jobs
+*   **Notifications:** AlarmManager
+*   **Cleanup:** WorkManager (Periodic jobs)
 
 ## 5. Testing
 *   **Unit Tests:** JUnit 4, Mockito-Kotlin, Robolectric

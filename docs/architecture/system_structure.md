@@ -36,15 +36,20 @@ graph TD
     *   `camera`: CameraX wrapper
     *   `storage`: FileSystem wrapper
     *   `media`: Transformer wrapper
+    *   `notification`: AlarmManager/NotificationManager wrapper
+    *   `settings`: DataStore wrapper
 *   **Domain Logic**: `com.dailyflash.domain.*`
     *   `GetMonthVideosUseCase`
     *   `SaveVideoUseCase`
     *   `DeleteClipUseCase`
     *   `ExportJournalUseCase`
+    *   `settings`: `GetSettingsUseCase`, `UpdateReminderUseCase` (Grouped)
 *   **UI Logic**: `com.dailyflash.presentation.*`
     *   `camera`: CameraScreen + ViewModel
     *   `calendar`: CalendarScreen + ViewModel
     *   `export`: ExportScreen + ViewModel
+    *   `gallery`: GalleryScreen + ViewModel
+    *   `settings`: SettingsDialog/Screen
 
 ## 3. Dependency Rules
 1.  **Strict Unidirectional**: Presentation depends on Domain. Domain depends on *nothing*. Data depends on Domain (Impl) and Core.

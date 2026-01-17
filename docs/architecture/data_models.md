@@ -54,3 +54,17 @@ sealed class ExportState {
     data class Error(val message: String) : ExportState()
 }
 ```
+
+## 4. User Preferences
+For engagement and settings features.
+
+### `UserSettings`
+```kotlin
+data class UserSettings(
+    val dailyReminderTime: LocalTime? = LocalTime.of(20, 0), // Default 8 PM
+    val isReminderEnabled: Boolean = false,
+    val autoCleanupEnabled: Boolean = false,
+    val currentStreak: Int = 0,
+    val lastRecordingDate: LocalDate? = null
+)
+```

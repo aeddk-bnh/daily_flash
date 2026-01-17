@@ -51,9 +51,33 @@ interface IMediaProcessor {
         videoFiles: List<File>,
         outputFile: File,
         audioTrack: Uri? = null,
+        enableFade: Boolean = false,
+        textOverlay: (index: Int) -> String? = { null },
         onProgress: (Float) -> Unit
     ): Result<File>
     
     fun cancelProcessing()
+}
+```
+
+## 4. Engagement & Settings Module
+**Responsibility:** User preferences and notifications.
+
+### `INotificationManager`
+```kotlin
+interface INotificationManager {
+    fun scheduleDailyReminder(time: LocalTime)
+    fun cancelReminder()
+}
+```
+
+### `ISettingsRepository`
+```kotlin
+interface ISettingsRepository {
+    val userSettings: Flow<UserSettings>
+    suspend fun updateReminderTime(time: LocalTime)
+    suspend fun toggleReminder(isEnabled: Boolean)
+    suspend fun toggleAutoCleanup(isEnabled: Boolean)
+    suspend fun updateStreak(today: LocalDate)
 }
 ```
