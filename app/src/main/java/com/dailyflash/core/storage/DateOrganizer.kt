@@ -33,18 +33,27 @@ object DateOrganizer {
      */
     fun generateFilename(date: LocalDate): String {
         val timestamp = System.currentTimeMillis()
-        return "${StorageConfig.FILENAME_PREFIX}${timestamp}${StorageConfig.VIDEO_EXTENSION}"
+        val dateStr = date.format(DateTimeFormatter.BASIC_ISO_DATE) // yyyyMMdd
+        return "${StorageConfig.FILENAME_PREFIX}${dateStr}_${timestamp}${StorageConfig.VIDEO_EXTENSION}"
     }
     
     /**
-     * Parse date from a date-organized path.
+     * Parse date from a date-organized path or filename.
      * 
-     * @param path Path in format YYYY/MM/DD
+     * @param path Path or filename
      * @return LocalDate if parsing succeeds, null otherwise
      */
     fun parseDateFromPath(path: String): LocalDate? {
         return try {
-            // Regex to match YYYY/MM/DD logic (platform agnostic separator handled by looking for digits)
+            // Check for flattened filename format: dailyflash_20240117_...
+            val filenameRegex = Regex(".*dailyflash_(\\d{8})_\\d+.*")
+            val filenameMatch = filenameRegex.find(path)
+            if (filenameMatch != null) {
+                val (dateStr) = filenameMatch.destructured
+                return LocalDate.parse(dateStr, DateTimeFormatter.BASIC_ISO_DATE)
+            }
+
+            // Fallback to folder structure: YYYY/MM/DD
             val regex = Regex(".*(\\d{4})[\\\\/](\\d{2})[\\\\/](\\d{2}).*")
             val match = regex.find(path) ?: return null
             val (year, month, day) = match.destructured
