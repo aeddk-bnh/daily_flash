@@ -81,6 +81,10 @@ class CameraViewModel(
         cameraService.toggleTorch(newState)
     }
 
+    fun switchCamera() {
+        cameraService.switchCamera()
+    }
+
     private fun saveVideo(uri: Uri) {
         _uiState.update { CameraUiState.Saving }
         

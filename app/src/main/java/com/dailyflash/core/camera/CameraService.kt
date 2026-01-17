@@ -47,6 +47,7 @@ class CameraService(
     private var activeRecording: Recording? = null
     private var lifecycleOwner: LifecycleOwner? = null
     private var camera: androidx.camera.core.Camera? = null
+    private var currentCameraSelector: CameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
 
     /**
      * Bind camera to lifecycle owner.
@@ -94,8 +95,8 @@ class CameraService(
 
                 videoCapture = VideoCapture.withOutput(recorder)
 
-                // 4. Select back camera
-                val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+                // 4. Use current camera selector
+                val cameraSelector = currentCameraSelector
 
                 // Unbind any existing use cases before rebinding
                 cameraProvider?.unbindAll()
@@ -301,6 +302,19 @@ class CameraService(
         // Let's modify bindToLifecycle to store the camera object or re-bind.
         // Better: store the camera object.
         camera?.cameraControl?.enableTorch(enabled)
+    }
+
+    override fun switchCamera() {
+        currentCameraSelector = if (currentCameraSelector == CameraSelector.DEFAULT_BACK_CAMERA) {
+            CameraSelector.DEFAULT_FRONT_CAMERA
+        } else {
+            CameraSelector.DEFAULT_BACK_CAMERA
+        }
+        
+        // Re-bind if we have a lifecycle owner
+        lifecycleOwner?.let { owner ->
+            bindToLifecycle(owner)
+        }
     }
 
     /**

@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.FlashOn
 import androidx.compose.material.icons.filled.FlashOff
+import androidx.compose.material.icons.filled.Cached
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -66,16 +67,17 @@ fun CameraScreen(
         )
 
         // Overlay Controls (Top)
-        Box(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            // Torch Toggle
+            // Torch Toggle (Left)
             IconButton(
                 onClick = { viewModel.toggleTorch() },
                 modifier = Modifier
-                    .align(Alignment.TopStart)
                     .background(Color.Black.copy(alpha = 0.4f), CircleShape)
             ) {
                 Icon(
@@ -85,18 +87,33 @@ fun CameraScreen(
                 )
             }
 
-            // Settings
-            IconButton(
-                onClick = onNavigateToSettings,
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .background(Color.Black.copy(alpha = 0.4f), CircleShape)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Settings,
-                    contentDescription = "Settings",
-                    tint = Color.White
-                )
+            // Right Side: Switch Camera + Settings
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                // Switch Camera
+                IconButton(
+                    onClick = { viewModel.switchCamera() },
+                    modifier = Modifier
+                        .background(Color.Black.copy(alpha = 0.4f), CircleShape)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Cached,
+                        contentDescription = "Switch Camera",
+                        tint = Color.White
+                    )
+                }
+
+                // Settings
+                IconButton(
+                    onClick = onNavigateToSettings,
+                    modifier = Modifier
+                        .background(Color.Black.copy(alpha = 0.4f), CircleShape)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Settings,
+                        contentDescription = "Settings",
+                        tint = Color.White
+                    )
+                }
             }
         }
 
