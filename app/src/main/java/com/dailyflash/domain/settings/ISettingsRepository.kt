@@ -7,4 +7,5 @@ interface ISettingsRepository {
     
     suspend fun updateReminder(enabled: Boolean, time: java.time.LocalTime)
     suspend fun updateAutoCleanup(enabled: Boolean, days: Int)
+    suspend fun updateStreak(today: java.time.LocalDate)
 }

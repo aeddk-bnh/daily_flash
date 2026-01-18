@@ -61,6 +61,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var exportJournalUseCase: ExportJournalUseCase
     private lateinit var deleteClipUseCase: com.dailyflash.domain.DeleteClipUseCase
     private lateinit var getAllVideosUseCase: com.dailyflash.domain.GetAllVideosUseCase
+    private lateinit var updateStreakUseCase: com.dailyflash.domain.settings.UpdateStreakUseCase
     
     // Settings Dependencies
     private lateinit var settingsDataStore: com.dailyflash.core.settings.SettingsDataStore
@@ -120,6 +121,7 @@ class MainActivity : ComponentActivity() {
         exportJournalUseCase = ExportJournalUseCase(videoRepository, mediaProcessor, storageManager)
         deleteClipUseCase = com.dailyflash.domain.DeleteClipUseCase(videoRepository)
         getAllVideosUseCase = com.dailyflash.domain.GetAllVideosUseCase(videoRepository)
+        updateStreakUseCase = com.dailyflash.domain.settings.UpdateStreakUseCase(settingsRepository)
         
         // Schedule auto-cleanup
         com.dailyflash.core.storage.CleanupWorker.schedule(this)
@@ -144,7 +146,8 @@ class MainActivity : ComponentActivity() {
                             getUserSettingsUseCase = getUserSettingsUseCase,
                             updateReminderUseCase = updateReminderUseCase,
                             updateAutoCleanupUseCase = updateAutoCleanupUseCase,
-                            getStorageLocationUseCase = getStorageLocationUseCase
+                            getStorageLocationUseCase = getStorageLocationUseCase,
+                            updateStreakUseCase = updateStreakUseCase
                         )
                     }
                     showPermissionDenied -> {

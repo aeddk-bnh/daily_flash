@@ -7,9 +7,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dailyflash.core.camera.ICameraService
 import com.dailyflash.domain.CaptureVideoUseCase
+import com.dailyflash.domain.GetAllVideosUseCase
+import com.dailyflash.domain.settings.GetUserSettingsUseCase
+import com.dailyflash.domain.settings.UpdateStreakUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -23,7 +29,10 @@ sealed interface CameraUiState {
 
 class CameraViewModel(
     private val cameraService: ICameraService,
-    private val captureVideoUseCase: CaptureVideoUseCase
+    private val captureVideoUseCase: CaptureVideoUseCase,
+    private val getAllVideosUseCase: GetAllVideosUseCase,
+    private val getUserSettingsUseCase: GetUserSettingsUseCase,
+    private val updateStreakUseCase: UpdateStreakUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<CameraUiState>(CameraUiState.Idle)
@@ -34,6 +43,41 @@ class CameraViewModel(
 
     private val _recordingProgress = MutableStateFlow(0f)
     val recordingProgress: StateFlow<Float> = _recordingProgress.asStateFlow()
+
+    private val _onionSkinUri = MutableStateFlow<Uri?>(null)
+    val onionSkinUri: StateFlow<Uri?> = _onionSkinUri.asStateFlow()
+
+    private val _onionSkinEnabled = MutableStateFlow(true)
+    val onionSkinEnabled: StateFlow<Boolean> = _onionSkinEnabled.asStateFlow()
+
+    val userSettings = getUserSettingsUseCase()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = com.dailyflash.domain.settings.UserSettings()
+        )
+
+    init {
+        loadLastThumbnail()
+    }
+
+    private fun loadLastThumbnail() {
+        viewModelScope.launch {
+            getAllVideosUseCase().collect { videos ->
+                if (videos.isNotEmpty()) {
+                    // Sort by date descending and get the most recent one
+                    val lastVideo = videos.filter { it.date != java.time.LocalDate.now() }
+                                          .maxByOrNull { it.date }
+                                          ?: videos.maxByOrNull { it.date }
+                    _onionSkinUri.value = lastVideo?.thumbnailUri
+                }
+            }
+        }
+    }
+
+    fun toggleOnionSkin() {
+        _onionSkinEnabled.value = !_onionSkinEnabled.value
+    }
 
     fun bindToLifecycle(lifecycleOwner: LifecycleOwner) {
         cameraService.bindToLifecycle(lifecycleOwner)
@@ -92,6 +136,7 @@ class CameraViewModel(
             captureVideoUseCase(uri)
                 .fold(
                     onSuccess = { entity ->
+                        updateStreakUseCase()
                         _uiState.update { CameraUiState.Success(entity.uri) }
                     },
                     onFailure = { error ->

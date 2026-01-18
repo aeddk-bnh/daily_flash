@@ -9,7 +9,13 @@ DailyFlash is an Android application for capturing 1-second daily video moments 
 - **GitHub Repo:** `https://github.com/aeddk-bnh/daily_flash.git`
 
 ## Recent Changes (2026-01-18)
-1.  **V4: Storage Location Display:**
+1.  **V6: Onion Skin & Gamification:**
+    *   Implemented **Onion Skin (Ghost Overlay)**: Semi-transparent overlay of the last recorded frame for better alignment.
+    *   Implemented **Streak Tracking**: Tracks consecutive days of recording.
+    *   Updated `CameraScreen` with Streak display and Onion Skin toggle.
+    *   Added `UpdateStreakUseCase` and updated `SettingsRepository`.
+    *   Build passed and deployed to emulator (2026-01-18).
+2.  **V4: Storage Location Display:**
     *   Added display of storage path (`Movies/DailyFlash`) in Settings.
     *   Implemented `GetStorageLocationUseCase`.
 2.  **V5: Camera Lens Switching:**

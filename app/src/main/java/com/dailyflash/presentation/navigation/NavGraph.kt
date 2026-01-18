@@ -37,7 +37,8 @@ fun NavGraph(
     getUserSettingsUseCase: com.dailyflash.domain.settings.GetUserSettingsUseCase,
     updateReminderUseCase: com.dailyflash.domain.settings.UpdateReminderUseCase,
     updateAutoCleanupUseCase: com.dailyflash.domain.settings.UpdateAutoCleanupUseCase,
-    getStorageLocationUseCase: com.dailyflash.domain.settings.GetStorageLocationUseCase
+    getStorageLocationUseCase: com.dailyflash.domain.settings.GetStorageLocationUseCase,
+    updateStreakUseCase: com.dailyflash.domain.settings.UpdateStreakUseCase
 ) {
     NavHost(
         navController = navController,
@@ -48,7 +49,13 @@ fun NavGraph(
         popExitTransition = { fadeOut(animationSpec = androidx.compose.animation.core.tween(400)) + slideOutHorizontally { it / 3 } }
     ) {
         composable("camera") {
-            val viewModel = CameraViewModel(cameraService, captureVideoUseCase)
+            val viewModel = CameraViewModel(
+                cameraService, 
+                captureVideoUseCase, 
+                getAllVideosUseCase, 
+                getUserSettingsUseCase, 
+                updateStreakUseCase
+            )
             CameraScreen(
                 viewModel = viewModel,
                 onNavigateToGallery = { navController.navigate("gallery") },

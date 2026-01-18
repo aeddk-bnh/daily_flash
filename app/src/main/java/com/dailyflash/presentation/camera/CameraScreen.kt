@@ -24,6 +24,15 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.FlashOn
 import androidx.compose.material.icons.filled.FlashOff
 import androidx.compose.material.icons.filled.Cached
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.Whatshot
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -54,6 +63,9 @@ fun CameraScreen(
     val uiState by viewModel.uiState.collectAsState()
     val torchEnabled by viewModel.torchEnabled.collectAsState()
     val recordingProgress by viewModel.recordingProgress.collectAsState()
+    val onionSkinUri by viewModel.onionSkinUri.collectAsState()
+    val onionSkinEnabled by viewModel.onionSkinEnabled.collectAsState()
+    val settings by viewModel.userSettings.collectAsState()
 
     LaunchedEffect(lifecycleOwner) {
         viewModel.bindToLifecycle(lifecycleOwner)
@@ -65,6 +77,17 @@ fun CameraScreen(
             factory = { viewModel.getPreviewView() },
             modifier = Modifier.fillMaxSize()
         )
+
+        // Onion Skin Overlay
+        if (onionSkinEnabled && onionSkinUri != null) {
+            AsyncImage(
+                model = onionSkinUri,
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                alpha = 0.3f,
+                contentScale = ContentScale.Crop
+            )
+        }
 
         // Overlay Controls (Top)
         Row(
@@ -87,8 +110,44 @@ fun CameraScreen(
                 )
             }
 
-            // Right Side: Switch Camera + Settings
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            // Streak Display (Center)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .background(Color.Black.copy(alpha = 0.4f), RoundedCornerShape(16.dp))
+                    .padding(horizontal = 12.dp, vertical = 6.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Whatshot,
+                    contentDescription = "Streak",
+                    tint = Color(0xFFFF9800),
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = "${settings.currentStreak}",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color.White
+                )
+            }
+
+            // Right Side: Switch Camera + Onion Skin + Settings
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                // Onion Skin Toggle
+                if (onionSkinUri != null) {
+                    IconButton(
+                        onClick = { viewModel.toggleOnionSkin() },
+                        modifier = Modifier
+                            .background(Color.Black.copy(alpha = 0.4f), CircleShape)
+                    ) {
+                        Icon(
+                            imageVector = if (onionSkinEnabled) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                            contentDescription = "Onion Skin",
+                            tint = Color.White
+                        )
+                    }
+                }
+
                 // Switch Camera
                 IconButton(
                     onClick = { viewModel.switchCamera() },

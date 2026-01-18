@@ -59,7 +59,8 @@ Provide a minimal Android application for capturing 1-second daily video moments
 
 ### 3.6 Advanced Features
 *   **REQ-ADV-01 (Preview):** System **MUST** show an "Instant Preview" (PIP or Overlay) immediately after recording to validate the shot.
-*   **REQ-ADV-02 (Export):** Export process **SHOULD** support text overlays (Date) on individual clips.
+*   **REQ-ADV-02 (Alignment):** System **MUST** support **Onion Skin (Ghost Overlay)**: displaying a semi-transparent frame from the previous day's clip on the camera preview for consistency.
+*   **REQ-ADV-03 (Export):** Export process **SHOULD** support text overlays (Date) on individual clips.
 *   **REQ-ADV-03 (Export):** Export process **SHOULD** apply fade-in/out effects to background audio.
 *   **REQ-ADV-04 (Storage):** System **SHOULD** offer an option to "Auto-Cleanup" raw clips after successful export of a compilation.
 
