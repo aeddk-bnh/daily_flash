@@ -121,7 +121,6 @@ fun ColumnScope.ExportConfigSection(
             )
             
             DateSelector(label = "From", date = startDate, onDateChanged = onStartDateChanged)
-            DateSelector(label = "From", date = startDate, onDateChanged = onStartDateChanged)
             DateSelector(label = "To", date = endDate, onDateChanged = onEndDateChanged)
             
             AudioSelector(
