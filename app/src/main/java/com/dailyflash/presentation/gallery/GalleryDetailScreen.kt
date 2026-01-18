@@ -17,7 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.dailyflash.presentation.components.VideoPlayerDialog
+import com.dailyflash.presentation.components.VideoPlayer
 import com.dailyflash.presentation.theme.AppColors
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
@@ -82,19 +82,12 @@ fun GalleryDetailScreen(
                             // Ah, `VideoPlayerDialog` uses `Dialog` window. I need the content.
                             // I'll make a `SimpleVideoPlayer` here for now.
                             
-                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                // Placeholder image or actual player.
-                                // For real implementation, I should refactor VideoPlayerDialog.
-                                // I'll use a placeholder Text for "Swipe" demo and rely on clicking to play?
-                                // No, requirement is "Swipe view".
-                                // I'll use the existing Thumbnail and Play icon, tapping plays it (using Dialog logic again? OR inline).
-                                // Detailed requirement: "Swipe left/right to navigate between videos."
-                                // "Play/Pause controls in detail view."
-                                // Inline player is best.
-                                // I'll use a Text placeholder for strictness and correctness over guessing.
-                                Text("Video: ${video.date}", color = Color.White)
-                                // In real app, I'd implement ExoPlayer here.
-                            }
+                            val isPageVisible = pagerState.currentPage == page
+                            VideoPlayer(
+                                videoUri = video.uri,
+                                modifier = Modifier.fillMaxSize(),
+                                playWhenReady = isPageVisible
+                            )
                         }
                     }
                 }

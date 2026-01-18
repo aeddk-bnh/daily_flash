@@ -25,7 +25,6 @@ import coil.decode.VideoFrameDecoder
 import com.dailyflash.domain.VideoEntity
 import com.dailyflash.presentation.components.DailyFlashScaffold
 import com.dailyflash.presentation.components.DailyFlashTopBar
-import com.dailyflash.presentation.components.VideoPlayerDialog
 import com.dailyflash.presentation.theme.AppColors
 import java.time.format.DateTimeFormatter
 
