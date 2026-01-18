@@ -18,7 +18,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
+import coil.ImageLoader
 import coil.compose.AsyncImage
+import coil.decode.VideoFrameDecoder
 import com.dailyflash.domain.VideoEntity
 import com.dailyflash.presentation.components.DailyFlashScaffold
 import com.dailyflash.presentation.components.DailyFlashTopBar
@@ -65,8 +68,19 @@ fun GalleryScreen(
                     if (state.videos.isEmpty()) {
                         EmptyGallery(modifier = Modifier.align(Alignment.Center))
                     } else {
+                        val context = LocalContext.current
+                        val imageLoader = remember(context) {
+                            ImageLoader.Builder(context)
+                                .components {
+                                    add(VideoFrameDecoder.Factory())
+                                }
+                                .crossfade(true)
+                                .build()
+                        }
+                        
                         VideoGrid(
                             videos = state.videos,
+                            imageLoader = imageLoader,
                             onVideoClick = { video -> 
                                 val index = state.videos.indexOf(video)
                                 if (index != -1) onNavigateToDetail(index)
@@ -82,6 +96,7 @@ fun GalleryScreen(
 @Composable
 fun VideoGrid(
     videos: List<VideoEntity>,
+    imageLoader: ImageLoader,
     onVideoClick: (VideoEntity) -> Unit
 ) {
     LazyVerticalGrid(
@@ -94,6 +109,7 @@ fun VideoGrid(
         items(videos) { video ->
             VideoItem(
                 video = video,
+                imageLoader = imageLoader,
                 onClick = { onVideoClick(video) }
             )
         }
@@ -103,6 +119,7 @@ fun VideoGrid(
 @Composable
 fun VideoItem(
     video: VideoEntity,
+    imageLoader: ImageLoader,
     onClick: () -> Unit
 ) {
     Column(
@@ -120,6 +137,7 @@ fun VideoItem(
             if (video.thumbnailUri != null) {
                 AsyncImage(
                     model = video.thumbnailUri,
+                    imageLoader = imageLoader,
                     contentDescription = null,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
