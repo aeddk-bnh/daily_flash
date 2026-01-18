@@ -157,8 +157,9 @@ class MediaProcessor(
                 // Create video sequence for concatenation
                 val videoSequence = EditedMediaItemSequence(editedMediaItems)
 
-                // Build composition
-                val compositionBuilder = Composition.Builder(videoSequence)
+                // Create sequences list
+                val sequences = mutableListOf<EditedMediaItemSequence>()
+                sequences.add(videoSequence)
 
                 // Add background audio if provided
                 if (audioTrack != null) {
@@ -167,11 +168,13 @@ class MediaProcessor(
                         .setRemoveVideo(true)
                         .build()
                     val audioSequence = EditedMediaItemSequence(listOf(audioEditedItem))
-                    // Note: For proper audio mixing, we'd need additional configuration
-                    // This adds audio as a separate track
+                     // Note: For proper audio mixing, we'd need additional configuration (e.g. volume)
+                     // But strictly adding it as a sequence mixes it.
+                    sequences.add(audioSequence)
                 }
 
-                val composition = compositionBuilder.build()
+                // Build composition with all sequences
+                val composition = Composition.Builder(sequences).build()
 
                 // Get output file path
                 val outputPath = getPathFromUri(outputUri)

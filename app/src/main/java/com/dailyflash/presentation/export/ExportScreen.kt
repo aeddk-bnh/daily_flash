@@ -15,6 +15,11 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Add
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -67,8 +72,10 @@ fun ExportScreen(
                     ExportConfigSection(
                         startDate = state.startDate,
                         endDate = state.endDate,
+                        audioTrack = state.audioTrack,
                         onStartDateChanged = { viewModel.updateDateRange(it, state.endDate) },
                         onEndDateChanged = { viewModel.updateDateRange(state.startDate, it) },
+                        onAudioTrackSelected = { viewModel.setAudioTrack(it) },
                         onExportClick = { viewModel.startExport() }
                     )
                 }
@@ -93,8 +100,10 @@ fun ExportScreen(
 fun ColumnScope.ExportConfigSection(
     startDate: LocalDate,
     endDate: LocalDate,
+    audioTrack: android.net.Uri?,
     onStartDateChanged: (LocalDate) -> Unit,
     onEndDateChanged: (LocalDate) -> Unit,
+    onAudioTrackSelected: (android.net.Uri?) -> Unit,
     onExportClick: () -> Unit
 ) {
     Card(
@@ -112,7 +121,13 @@ fun ColumnScope.ExportConfigSection(
             )
             
             DateSelector(label = "From", date = startDate, onDateChanged = onStartDateChanged)
+            DateSelector(label = "From", date = startDate, onDateChanged = onStartDateChanged)
             DateSelector(label = "To", date = endDate, onDateChanged = onEndDateChanged)
+            
+            AudioSelector(
+                selectedUri = audioTrack,
+                onUriSelected = onAudioTrackSelected
+            )
         }
     }
     
@@ -164,6 +179,66 @@ fun DateSelector(
             IconButton(onClick = { onDateChanged(date.plusDays(1)) }) {
                 Icon(Icons.Default.KeyboardArrowRight, null, tint = AppColors.OnSurface)
             }
+        }
+    }
+}
+
+@Composable
+fun AudioSelector(
+    selectedUri: android.net.Uri?,
+    onUriSelected: (android.net.Uri?) -> Unit
+) {
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: android.net.Uri? ->
+        onUriSelected(uri)
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            text = "Background Audio (Optional)",
+            style = MaterialTheme.typography.titleMedium,
+            color = AppColors.OnSurface
+        )
+
+        if (selectedUri != null) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(AppColors.SurfaceVariant, MaterialTheme.shapes.small)
+                    .padding(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.CheckCircle, // Reusing existing icon or could use MusicNote if available
+                    contentDescription = null,
+                    tint = AppColors.Primary,
+                    modifier = Modifier.size(24.dp)
+                )
+                
+                Spacer(modifier = Modifier.width(8.dp))
+                
+                Text(
+                    text = "Audio Selected",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = AppColors.OnSurfaceVariant,
+                    modifier = Modifier.weight(1f)
+                )
+                
+                IconButton(onClick = { onUriSelected(null) }) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Remove Audio",
+                        tint = AppColors.OnSurfaceVariant
+                    )
+                }
+            }
+        } else {
+            DailyFlashSecondaryButton(
+                onClick = { launcher.launch("audio/*") },
+                text = "Select Audio File",
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
 }
