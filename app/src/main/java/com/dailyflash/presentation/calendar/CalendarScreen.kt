@@ -53,6 +53,13 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.ui.platform.LocalContext
+import coil.ImageLoader
+import coil.decode.VideoFrameDecoder
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.remember
 
 @Composable
@@ -63,11 +70,33 @@ fun CalendarScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var selectedVideoUri by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<android.net.Uri?>(null) }
+    var videoToDelete by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<VideoEntity?>(null) }
 
     if (selectedVideoUri != null) {
         com.dailyflash.presentation.components.VideoPlayerDialog(
             videoUri = selectedVideoUri!!,
             onDismiss = { selectedVideoUri = null }
+        )
+    }
+
+    if (videoToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { videoToDelete = null },
+            title = { Text("Delete Video") },
+            text = { Text("Are you sure you want to delete the video for ${videoToDelete?.date}?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    videoToDelete?.let { viewModel.deleteVideo(it) }
+                    videoToDelete = null
+                }) {
+                    Text("Delete", color = AppColors.Error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { videoToDelete = null }) {
+                    Text("Cancel")
+                }
+            }
         )
     }
 
@@ -118,12 +147,26 @@ fun CalendarScreen(
                     
                     Spacer(modifier = Modifier.height(8.dp))
                     
+                    val context = LocalContext.current
+                    val imageLoader = remember(context) {
+                        ImageLoader.Builder(context)
+                            .components { add(VideoFrameDecoder.Factory()) }
+                            .crossfade(true)
+                            .build()
+                    }
+
                     CalendarGrid(
                         yearMonth = state.yearMonth,
                         days = state.days,
+                        imageLoader = imageLoader,
                         onDayClick = { video ->
                             if (video != null) {
                                 selectedVideoUri = video.uri
+                            }
+                        },
+                        onDayLongClick = { video ->
+                            if (video != null) {
+                                videoToDelete = video
                             }
                         }
                     )
@@ -180,7 +223,9 @@ fun DaysOfWeekHeader() {
 fun CalendarGrid(
     yearMonth: YearMonth,
     days: Map<LocalDate, VideoEntity?>,
-    onDayClick: (VideoEntity?) -> Unit
+    imageLoader: ImageLoader,
+    onDayClick: (VideoEntity?) -> Unit,
+    onDayLongClick: (VideoEntity?) -> Unit
 ) {
     val firstDayOfMonth = yearMonth.atDay(1)
     val daysInMonth = yearMonth.lengthOfMonth()
@@ -207,17 +252,22 @@ fun CalendarGrid(
             DayCell(
                 date = date,
                 video = video,
-                onClick = { onDayClick(video) }
+                imageLoader = imageLoader,
+                onClick = { onDayClick(video) },
+                onLongClick = { onDayLongClick(video) }
             )
         }
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun DayCell(
     date: LocalDate,
     video: VideoEntity?,
-    onClick: () -> Unit
+    imageLoader: ImageLoader,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit
 ) {
     val isToday = date == LocalDate.now()
     val hasVideo = video != null
@@ -242,10 +292,11 @@ fun DayCell(
                 color = if (isToday) AppColors.Primary else Color.Transparent,
                 shape = CircleShape
             )
-            .clickable(
+            .combinedClickable(
                 interactionSource = interactionSource,
                 indication = null,
-                onClick = onClick
+                onClick = onClick,
+                onLongClick = onLongClick
             ),
         contentAlignment = Alignment.Center
     ) {
@@ -253,6 +304,7 @@ fun DayCell(
             AsyncImage(
                 model = video.uri,
                 contentDescription = null,
+                imageLoader = imageLoader,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,
                 alpha = 0.6f

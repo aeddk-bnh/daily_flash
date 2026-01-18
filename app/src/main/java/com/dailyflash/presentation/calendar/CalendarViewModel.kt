@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import java.time.LocalDate
 import java.time.YearMonth
+import kotlinx.coroutines.launch
 
 sealed interface CalendarUiState {
     data class Loading(val yearMonth: YearMonth) : CalendarUiState
@@ -24,8 +25,27 @@ sealed interface CalendarUiState {
 }
 
 class CalendarViewModel(
-    private val getCalendarDataUseCase: GetCalendarDataUseCase
+    private val getCalendarDataUseCase: GetCalendarDataUseCase,
+    private val deleteClipUseCase: com.dailyflash.domain.DeleteClipUseCase
 ) : ViewModel() {
+
+    fun deleteVideo(video: VideoEntity) {
+        // Optimistically update UI or just reload?
+        // Since getCalendarDataUseCase is a Flow, we might need to trigger a reload or if it observes DB, it auto-updates.
+        // Assuming UseCase handles DB deletion and Flow emits new data.
+        viewModelScope.launch {
+            try {
+                deleteClipUseCase(video.id)
+                // Reload current month to refresh data
+                val current = (uiState.value as? CalendarUiState.Success)?.yearMonth 
+                    ?: (uiState.value as? CalendarUiState.Loading)?.yearMonth 
+                    ?: YearMonth.now()
+                loadMonth(current)
+            } catch (e: Exception) {
+                // Handle error (maybe show snackbar, but for now log/ignore)
+            }
+        }
+    }
 
     private val _uiState = MutableStateFlow<CalendarUiState>(
         CalendarUiState.Loading(YearMonth.now())

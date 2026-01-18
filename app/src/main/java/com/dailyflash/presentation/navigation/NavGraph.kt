@@ -92,7 +92,7 @@ fun NavGraph(
         }
         
         composable("calendar") {
-            val viewModel = CalendarViewModel(getCalendarDataUseCase)
+            val viewModel = CalendarViewModel(getCalendarDataUseCase, deleteClipUseCase)
             CalendarScreen(
                 viewModel = viewModel,
                 onNavigateToCamera = { navController.popBackStack() },
