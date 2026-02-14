@@ -8,11 +8,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import android.os.Build
+import androidx.compose.foundation.clickable
+import com.google.accompanist.permissions.rememberPermissionState
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.shouldShowRationale
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import com.dailyflash.presentation.components.DailyFlashScaffold
 import com.dailyflash.presentation.components.DailyFlashTopBar
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel,
@@ -20,6 +27,11 @@ fun SettingsScreen(
 ) {
     val settings by viewModel.settings.collectAsState()
     val context = LocalContext.current
+    val postNotificationPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        rememberPermissionState(permission = android.Manifest.permission.POST_NOTIFICATIONS)
+    } else {
+        null
+    }
 
     val timePickerDialog = remember {
         TimePickerDialog(
@@ -54,9 +66,19 @@ fun SettingsScreen(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text("Daily Reminder")
-                Switch(
+                                Switch(
                     checked = settings.dailyReminderEnabled,
-                    onCheckedChange = { viewModel.onReminderToggle(it) }
+                    onCheckedChange = { enabled ->
+                        if (enabled) {
+                            if (postNotificationPermission == null || postNotificationPermission.status.isGranted) {
+                                viewModel.onReminderToggle(true)
+                            } else {
+                                postNotificationPermission.launchPermissionRequest()
+                            }
+                        } else {
+                            viewModel.onReminderToggle(false)
+                        }
+                    }
                 )
             }
             
@@ -137,3 +159,5 @@ fun SettingsScreen(
         }
     }
 }
+
+
