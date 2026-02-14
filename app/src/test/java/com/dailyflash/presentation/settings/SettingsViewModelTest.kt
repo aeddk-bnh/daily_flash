@@ -1,6 +1,7 @@
 package com.dailyflash.presentation.settings
 
 import com.dailyflash.domain.settings.GetUserSettingsUseCase
+import com.dailyflash.domain.settings.GetStorageLocationUseCase
 import com.dailyflash.domain.settings.UpdateAutoCleanupUseCase
 import com.dailyflash.domain.settings.UpdateReminderUseCase
 import com.dailyflash.domain.settings.UserSettings
@@ -24,16 +25,19 @@ class SettingsViewModelTest {
     private val getUserSettingsUseCase: GetUserSettingsUseCase = mock()
     private val updateReminderUseCase: UpdateReminderUseCase = mock()
     private val updateAutoCleanupUseCase: UpdateAutoCleanupUseCase = mock()
+    private val getStorageLocationUseCase: GetStorageLocationUseCase = mock()
 
     private lateinit var viewModel: SettingsViewModel
 
     @Before
     fun setup() {
         whenever(getUserSettingsUseCase()).thenReturn(flowOf(UserSettings()))
+        whenever(getStorageLocationUseCase()).thenReturn("Movies/DailyFlash")
         viewModel = SettingsViewModel(
             getUserSettingsUseCase,
             updateReminderUseCase,
-            updateAutoCleanupUseCase
+            updateAutoCleanupUseCase,
+            getStorageLocationUseCase
         )
     }
 

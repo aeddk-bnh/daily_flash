@@ -24,7 +24,6 @@ import com.dailyflash.core.logging.FlowLogger
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.io.File
 import java.lang.Runnable
-import java.time.LocalDate
 import kotlin.coroutines.resume
 
 /**
@@ -33,6 +32,7 @@ import kotlin.coroutines.resume
  */
 class CameraService(
     private val context: Context,
+    @Suppress("UNUSED_PARAMETER")
     private val storageManager: IStorageManager
 ) : ICameraService {
 
@@ -139,11 +139,11 @@ class CameraService(
 
     /**
      * Record a video clip of specified duration.
-     * Creates a temporary file, records for the specified duration,
-     * then saves to storage via StorageManager.
+     * Creates a temporary file and returns its URI.
+     * Persistence to app storage is handled by domain/data layer.
      *
      * @param durationMs Recording duration in milliseconds (default 1000ms)
-     * @return Result with URI of recorded video or error
+     * @return Result with URI of recorded temp file or error
      */
     override suspend fun recordClip(durationMs: Long): Result<Uri> {
         FlowLogger.flow("RecordingStart", "requestedDuration=${durationMs}ms")
@@ -241,23 +241,15 @@ class CameraService(
                 }
             }
 
-            // 6. Move temp file to storage via StorageManager
+            // 6. Return temp file URI and let repository persist once.
             recordingResult.fold(
                 onSuccess = { file ->
                     FlowLogger.flow("RecordingComplete", "file=${file.length()} bytes")
-                    
-                    val videoBytes = file.readBytes()
-                    file.delete() // Clean up temp file
-                    FlowLogger.resource("RELEASE", "TempFile", "deleted=${file.path}")
-
-                    // 7. Return Result.success(uri)
-                    val savedUri = storageManager.saveVideo(videoBytes, LocalDate.now())
-                    
                     val totalDuration = System.currentTimeMillis() - recordingStartTime
-                    FlowLogger.timing("RecordClip", totalDuration, "uri=$savedUri, size=${videoBytes.size}")
-                    FlowLogger.flow("RecordingSaved", "uri=$savedUri")
+                    val tempUri = Uri.fromFile(file)
+                    FlowLogger.timing("RecordClip", totalDuration, "tempUri=$tempUri, size=${file.length()}")
                     
-                    Result.success(savedUri)
+                    Result.success(tempUri)
                 },
                 onFailure = { error ->
                     FlowLogger.error("Recording", error, "state=FAILED")
@@ -296,7 +288,7 @@ class CameraService(
     }
 
     override fun toggleTorch(enabled: Boolean) {
-        val provider = cameraProvider ?: return
+        if (cameraProvider == null) return
         // We need to access the camera object to control torch
         // Camera is bound in bindToLifecycle, but we don't store it.
         // Let's modify bindToLifecycle to store the camera object or re-bind.

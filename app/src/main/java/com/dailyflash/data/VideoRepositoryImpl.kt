@@ -8,8 +8,8 @@ import com.dailyflash.core.storage.IStorageManager
 import com.dailyflash.core.storage.VideoFile
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import java.io.File
 import java.time.LocalDate
 import java.time.YearMonth
 
@@ -109,6 +109,9 @@ class VideoRepositoryImpl(
             
             // Update cache with new entry
             videoCache[date] = videoFile
+
+            // If this came from a temporary local file, cleanup after successful copy.
+            cleanupIfLocalTempFile(uri)
             
             // Notify observers of cache change
             cacheVersion.value++
@@ -121,9 +124,9 @@ class VideoRepositoryImpl(
     
     override suspend fun deleteVideo(id: String): Result<Unit> {
         return try {
-            // Find video in cache by ID
-            val entry = videoCache.entries.find { it.value?.id == id }
-            val videoFile = entry?.value
+            // Resolve from cache first, then fallback to storage for cold-cache scenarios.
+            val cachedEntry = videoCache.entries.find { it.value?.id == id }
+            val videoFile = cachedEntry?.value ?: storageManager.getAllVideos().find { it.id == id }
                 ?: return Result.failure(NoSuchElementException("Video not found: $id"))
             
             // Delete from storage
@@ -132,8 +135,8 @@ class VideoRepositoryImpl(
                 return Result.failure(IllegalStateException("Failed to delete video from storage"))
             }
             
-            // Remove from cache
-            videoCache.remove(entry.key)
+            // Remove all cache entries pointing to this video id.
+            videoCache.entries.removeAll { it.value?.id == id }
             
             // Notify observers of cache change
             cacheVersion.value++
@@ -155,9 +158,26 @@ class VideoRepositoryImpl(
      */
     private fun readBytesFromUri(uri: Uri): ByteArray? {
         return try {
-            contentResolver?.openInputStream(uri)?.use { it.readBytes() }
+            if (uri.scheme == "file") {
+                val path = uri.path ?: return null
+                File(path).takeIf { it.exists() }?.readBytes()
+            } else {
+                contentResolver?.openInputStream(uri)?.use { it.readBytes() }
+            }
         } catch (e: Exception) {
             null
+        }
+    }
+
+    private fun cleanupIfLocalTempFile(uri: Uri) {
+        if (uri.scheme != "file") return
+        val path = uri.path ?: return
+        val file = File(path)
+        if (!file.exists()) return
+
+        // CameraService temp clips are created in cache with this prefix.
+        if (file.name.startsWith("dailyflash_temp_")) {
+            file.delete()
         }
     }
     

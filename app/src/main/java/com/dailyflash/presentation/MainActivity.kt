@@ -26,8 +26,13 @@ import com.dailyflash.core.media.MediaProcessor
 import com.dailyflash.domain.CaptureVideoUseCase
 import com.dailyflash.domain.GetCalendarDataUseCase
 import com.dailyflash.domain.ExportJournalUseCase
+import com.dailyflash.domain.DeleteClipUseCase
+import com.dailyflash.domain.GetAllVideosUseCase
 import com.dailyflash.presentation.navigation.NavGraph
 import com.dailyflash.presentation.theme.DailyFlashTheme
+import com.dailyflash.data.notification.NotificationManagerImpl
+import com.dailyflash.data.reminders.WorkManagerReminderScheduler
+import com.dailyflash.domain.settings.UpdateStreakUseCase
 
 /**
  * Main entry point for DailyFlash.
@@ -59,14 +64,16 @@ class MainActivity : ComponentActivity() {
     private lateinit var captureVideoUseCase: CaptureVideoUseCase
     private lateinit var getCalendarDataUseCase: GetCalendarDataUseCase
     private lateinit var exportJournalUseCase: ExportJournalUseCase
-    private lateinit var deleteClipUseCase: com.dailyflash.domain.DeleteClipUseCase
-    private lateinit var getAllVideosUseCase: com.dailyflash.domain.GetAllVideosUseCase
-    private lateinit var updateStreakUseCase: com.dailyflash.domain.settings.UpdateStreakUseCase
+    private lateinit var deleteClipUseCase: DeleteClipUseCase
+    private lateinit var getAllVideosUseCase: GetAllVideosUseCase
+    private lateinit var updateStreakUseCase: UpdateStreakUseCase
     
     // Settings Dependencies
     private lateinit var settingsDataStore: com.dailyflash.core.settings.SettingsDataStore
-    private lateinit var settingsRepository: com.dailyflash.data.settings.SettingsRepositoryImpl
-    private lateinit var notificationManager: com.dailyflash.core.notification.DailyNotificationManager
+        private lateinit var settingsRepository: com.dailyflash.data.settings.SettingsRepositoryImpl
+    private lateinit var reminderScheduler: com.dailyflash.data.reminders.WorkManagerReminderScheduler
+    private lateinit var notificationManager: com.dailyflash.data.notification.NotificationManagerImpl
+    
     
     private lateinit var getUserSettingsUseCase: com.dailyflash.domain.settings.GetUserSettingsUseCase
     private lateinit var updateReminderUseCase: com.dailyflash.domain.settings.UpdateReminderUseCase
@@ -105,24 +112,25 @@ class MainActivity : ComponentActivity() {
         cameraService = CameraService(this, storageManager)
         videoRepository = VideoRepositoryImpl(storageManager, contentResolver)
         mediaProcessor = MediaProcessor(this, storageManager)
-        
-        // Settings Init
-        settingsDataStore = com.dailyflash.core.settings.SettingsDataStore(this)
-        settingsRepository = com.dailyflash.data.settings.SettingsRepositoryImpl(settingsDataStore)
-        notificationManager = com.dailyflash.core.notification.DailyNotificationManager(this)
-        
-        getUserSettingsUseCase = com.dailyflash.domain.settings.GetUserSettingsUseCase(settingsRepository)
-        updateReminderUseCase = com.dailyflash.domain.settings.UpdateReminderUseCase(settingsRepository, notificationManager)
-        updateAutoCleanupUseCase = com.dailyflash.domain.settings.UpdateAutoCleanupUseCase(settingsRepository)
-        getStorageLocationUseCase = com.dailyflash.domain.settings.GetStorageLocationUseCase(storageManager)
-        
+
+        // Initialize domain use cases
         captureVideoUseCase = CaptureVideoUseCase(videoRepository)
         getCalendarDataUseCase = GetCalendarDataUseCase(videoRepository)
         exportJournalUseCase = ExportJournalUseCase(videoRepository, mediaProcessor, storageManager)
-        deleteClipUseCase = com.dailyflash.domain.DeleteClipUseCase(videoRepository)
-        getAllVideosUseCase = com.dailyflash.domain.GetAllVideosUseCase(videoRepository)
-        updateStreakUseCase = com.dailyflash.domain.settings.UpdateStreakUseCase(settingsRepository)
-        
+        deleteClipUseCase = DeleteClipUseCase(videoRepository)
+        getAllVideosUseCase = GetAllVideosUseCase(videoRepository)
+
+        // Settings Init
+        settingsDataStore = com.dailyflash.core.settings.SettingsDataStore(this)
+        settingsRepository = com.dailyflash.data.settings.SettingsRepositoryImpl(settingsDataStore)
+        reminderScheduler = com.dailyflash.data.reminders.WorkManagerReminderScheduler(this)
+        notificationManager = com.dailyflash.data.notification.NotificationManagerImpl(reminderScheduler)
+
+        getUserSettingsUseCase = com.dailyflash.domain.settings.GetUserSettingsUseCase(settingsRepository)
+        updateReminderUseCase = com.dailyflash.domain.settings.UpdateReminderUseCase(settingsRepository, notificationManager)
+        updateAutoCleanupUseCase = com.dailyflash.domain.settings.UpdateAutoCleanupUseCase(settingsRepository)
+        updateStreakUseCase = UpdateStreakUseCase(settingsRepository)
+        getStorageLocationUseCase = com.dailyflash.domain.settings.GetStorageLocationUseCase(storageManager)
         // Schedule auto-cleanup
         com.dailyflash.core.storage.CleanupWorker.schedule(this)
         
@@ -199,3 +207,12 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
+
+
+
+
+
+
+
+

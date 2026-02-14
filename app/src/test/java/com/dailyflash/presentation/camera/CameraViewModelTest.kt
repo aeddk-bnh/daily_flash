@@ -3,10 +3,17 @@ package com.dailyflash.presentation.camera
 import android.net.Uri
 import com.dailyflash.core.camera.ICameraService
 import com.dailyflash.domain.CaptureVideoUseCase
+import com.dailyflash.domain.GetAllVideosUseCase
 import com.dailyflash.domain.VideoEntity
+import com.dailyflash.domain.settings.GetUserSettingsUseCase
+import com.dailyflash.domain.settings.UpdateStreakUseCase
+import com.dailyflash.domain.settings.UserSettings
 import com.dailyflash.util.MainDispatcherRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import org.junit.Before
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -25,9 +32,26 @@ class CameraViewModelTest {
 
     private val mockCameraService: ICameraService = mock()
     private val mockCaptureUseCase: CaptureVideoUseCase = mock()
+    private val mockGetAllVideosUseCase: GetAllVideosUseCase = mock()
+    private val mockGetUserSettingsUseCase: GetUserSettingsUseCase = mock()
+    private val mockUpdateStreakUseCase: UpdateStreakUseCase = mock()
     
     // SUT
-    private val viewModel by lazy { CameraViewModel(mockCameraService, mockCaptureUseCase) }
+    private val viewModel by lazy {
+        CameraViewModel(
+            mockCameraService,
+            mockCaptureUseCase,
+            mockGetAllVideosUseCase,
+            mockGetUserSettingsUseCase,
+            mockUpdateStreakUseCase
+        )
+    }
+
+    @Before
+    fun setup() {
+        whenever(mockGetAllVideosUseCase()).thenReturn(flowOf(emptyList()))
+        whenever(mockGetUserSettingsUseCase()).thenReturn(flowOf(UserSettings()))
+    }
 
     @Test
     fun `initial state is Idle`() = runTest {
@@ -43,9 +67,11 @@ class CameraViewModelTest {
         )
 
         viewModel.startRecording()
+        advanceUntilIdle()
 
         verify(mockCameraService).recordClip(1000)
         verify(mockCaptureUseCase).invoke(uri)
+        verify(mockUpdateStreakUseCase).invoke()
         assertTrue(viewModel.uiState.value is CameraUiState.Success)
     }
 
@@ -54,6 +80,7 @@ class CameraViewModelTest {
         whenever(mockCameraService.recordClip(any())).thenReturn(Result.failure(RuntimeException("Error")))
 
         viewModel.startRecording()
+        advanceUntilIdle()
 
         assertTrue(viewModel.uiState.value is CameraUiState.Error)
         assertEquals("Error", (viewModel.uiState.value as CameraUiState.Error).message)
