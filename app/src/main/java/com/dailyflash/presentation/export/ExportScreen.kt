@@ -3,9 +3,9 @@ package com.dailyflash.presentation.export
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
@@ -14,6 +14,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material.icons.filled.Close
@@ -73,9 +74,11 @@ fun ExportScreen(
                         startDate = state.startDate,
                         endDate = state.endDate,
                         audioTrack = state.audioTrack,
+                        includeDateOverlay = state.includeDateOverlay,
                         onStartDateChanged = { viewModel.updateDateRange(it, state.endDate) },
                         onEndDateChanged = { viewModel.updateDateRange(state.startDate, it) },
                         onAudioTrackSelected = { viewModel.setAudioTrack(it) },
+                        onIncludeDateOverlayChanged = { viewModel.toggleDateOverlay(it) },
                         onExportClick = { viewModel.startExport() }
                     )
                 }
@@ -101,9 +104,11 @@ fun ColumnScope.ExportConfigSection(
     startDate: LocalDate,
     endDate: LocalDate,
     audioTrack: android.net.Uri?,
+    includeDateOverlay: Boolean,
     onStartDateChanged: (LocalDate) -> Unit,
     onEndDateChanged: (LocalDate) -> Unit,
     onAudioTrackSelected: (android.net.Uri?) -> Unit,
+    onIncludeDateOverlayChanged: (Boolean) -> Unit,
     onExportClick: () -> Unit
 ) {
     Card(
@@ -127,6 +132,22 @@ fun ColumnScope.ExportConfigSection(
                 selectedUri = audioTrack,
                 onUriSelected = onAudioTrackSelected
             )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "Show Date Overlay",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = AppColors.OnSurface
+                )
+                Switch(
+                    checked = includeDateOverlay,
+                    onCheckedChange = onIncludeDateOverlayChanged
+                )
+            }
         }
     }
     
@@ -165,7 +186,7 @@ fun DateSelector(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             IconButton(onClick = { onDateChanged(date.minusDays(1)) }) {
-                Icon(Icons.Default.KeyboardArrowLeft, null, tint = AppColors.OnSurface)
+                Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, null, tint = AppColors.OnSurface)
             }
             
             Text(
@@ -176,7 +197,7 @@ fun DateSelector(
             )
             
             IconButton(onClick = { onDateChanged(date.plusDays(1)) }) {
-                Icon(Icons.Default.KeyboardArrowRight, null, tint = AppColors.OnSurface)
+                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = AppColors.OnSurface)
             }
         }
     }
@@ -258,7 +279,7 @@ fun ProcessingSection(progress: Float) {
         Spacer(modifier = Modifier.height(32.dp))
         
         LinearProgressIndicator(
-            progress = progress,
+            progress = { progress },
             modifier = Modifier.fillMaxWidth().height(8.dp),
             color = AppColors.Primary,
             trackColor = AppColors.SurfaceVariant

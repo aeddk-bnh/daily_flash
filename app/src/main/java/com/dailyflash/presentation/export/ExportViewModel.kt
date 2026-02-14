@@ -18,8 +18,7 @@ sealed interface ExportUiState {
         val startDate: LocalDate = LocalDate.now().minusDays(30),
         val endDate: LocalDate = LocalDate.now(),
         val audioTrack: Uri? = null,
-        val includeDateOverlay: Boolean = false,
-        val fadeAudio: Boolean = false
+        val includeDateOverlay: Boolean = false
     ) : ExportUiState
     
     data class Processing(val progress: Float) : ExportUiState
@@ -59,13 +58,6 @@ class ExportViewModel(
         }
     }
     
-    fun toggleFadeAudio(enabled: Boolean) {
-        val currentState = _uiState.value
-        if (currentState is ExportUiState.Idle) {
-            _uiState.update { currentState.copy(fadeAudio = enabled) }
-        }
-    }
-
     fun startExport() {
         val state = _uiState.value as? ExportUiState.Idle ?: return
         
@@ -77,8 +69,11 @@ class ExportViewModel(
         
         val options = com.dailyflash.domain.ExportOptions(
             includeDateOverlay = state.includeDateOverlay,
-            fadeAudio = state.fadeAudio,
-            dateText = if (state.includeDateOverlay) "Date Overlay" else null // Placeholder logic for now, ideally derived from clip date which requires per-clip logic in MediaProcessor
+            dateText = if (state.includeDateOverlay) {
+                "${state.startDate} - ${state.endDate}"
+            } else {
+                null
+            }
         )
 
         exportJournalUseCase(
