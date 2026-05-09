@@ -257,7 +257,7 @@ fun ShutterButton(
         // Progress Ring
         if (isRecording) {
             CircularProgressIndicator(
-                progress = progress,
+                progress = { progress },
                 modifier = Modifier.fillMaxSize(),
                 color = AppColors.RecordRed,
                 strokeWidth = 4.dp,
