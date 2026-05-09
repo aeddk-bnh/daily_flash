@@ -4,8 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dailyflash.domain.GetCalendarDataUseCase
 import com.dailyflash.domain.VideoEntity
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
@@ -29,20 +32,22 @@ class CalendarViewModel(
     private val deleteClipUseCase: com.dailyflash.domain.DeleteClipUseCase
 ) : ViewModel() {
 
+    /** One-shot error events for the UI to display as Snackbar. */
+    private val _errorEvent = MutableSharedFlow<String>(extraBufferCapacity = 1)
+    val errorEvent: SharedFlow<String> = _errorEvent.asSharedFlow()
+
     fun deleteVideo(video: VideoEntity) {
-        // Optimistically update UI or just reload?
-        // Since getCalendarDataUseCase is a Flow, we might need to trigger a reload or if it observes DB, it auto-updates.
-        // Assuming UseCase handles DB deletion and Flow emits new data.
         viewModelScope.launch {
-            try {
-                deleteClipUseCase(video.id)
-                // Reload current month to refresh data
-                val current = (uiState.value as? CalendarUiState.Success)?.yearMonth 
-                    ?: (uiState.value as? CalendarUiState.Loading)?.yearMonth 
+            val result = deleteClipUseCase(video.id)
+            if (result.isSuccess) {
+                // Reload current month to refresh calendar grid
+                val current = (uiState.value as? CalendarUiState.Success)?.yearMonth
+                    ?: (uiState.value as? CalendarUiState.Loading)?.yearMonth
                     ?: YearMonth.now()
                 loadMonth(current)
-            } catch (e: Exception) {
-                // Handle error (maybe show snackbar, but for now log/ignore)
+            } else {
+                val msg = result.exceptionOrNull()?.message ?: "Failed to delete video"
+                _errorEvent.tryEmit(msg)
             }
         }
     }

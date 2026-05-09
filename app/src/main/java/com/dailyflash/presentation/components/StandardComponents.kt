@@ -34,11 +34,13 @@ import com.dailyflash.presentation.theme.AppColors
 fun DailyFlashScaffold(
     modifier: Modifier = Modifier,
     topBar: @Composable () -> Unit = {},
+    snackbarHost: @Composable () -> Unit = {},
     content: @Composable (PaddingValues) -> Unit
 ) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = topBar,
+        snackbarHost = snackbarHost,
         containerColor = AppColors.Background,
         content = content
     )

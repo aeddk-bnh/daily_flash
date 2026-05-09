@@ -45,9 +45,9 @@ fun ExportScreen(
     val uiState by viewModel.uiState.collectAsState()
     var exportedVideoUri by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<android.net.Uri?>(null) }
 
-    if (exportedVideoUri != null) {
+    exportedVideoUri?.let { uri ->
         com.dailyflash.presentation.components.VideoPlayerDialog(
-            videoUri = exportedVideoUri!!,
+            videoUri = uri,
             onDismiss = { exportedVideoUri = null }
         )
     }

@@ -69,16 +69,18 @@ class MediaProcessor(
             return@withContext Result.failure(IllegalArgumentException("Clip list cannot be empty"))
         }
 
-        // Validate each clip URI is accessible
-        for (clip in clips) {
-            try {
-                context.contentResolver.openInputStream(clip)?.close()
-            } catch (e: Exception) {
-                FlowLogger.error("StitchingValidation", e, "inaccessible clip=$clip")
-                return@withContext Result.failure(
-                    IllegalArgumentException("Cannot access clip: $clip", e)
-                )
+        // Validate each clip URI is accessible on IO thread
+        try {
+            withContext(Dispatchers.IO) {
+                for (clip in clips) {
+                    context.contentResolver.openInputStream(clip)?.close()
+                }
             }
+        } catch (e: Exception) {
+            FlowLogger.error("StitchingValidation", e, "inaccessible clip")
+            return@withContext Result.failure(
+                IllegalArgumentException("Cannot access one or more clips", e)
+            )
         }
         
         FlowLogger.flow("StitchingValidated", "all ${clips.size} clips accessible")
@@ -222,7 +224,7 @@ class MediaProcessor(
         progressHandler = Handler(Looper.getMainLooper())
         val progressHolder = ProgressHolder()
         
-        progressRunnable = object : Runnable {
+        val runnable = object : Runnable {
             override fun run() {
                 transformer?.let { t ->
                     val progressState = t.getProgress(progressHolder)
@@ -234,7 +236,8 @@ class MediaProcessor(
                 }
             }
         }
-        progressHandler?.post(progressRunnable!!)
+        progressRunnable = runnable
+        progressHandler?.post(runnable)
     }
 
     /**

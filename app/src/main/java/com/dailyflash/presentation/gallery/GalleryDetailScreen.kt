@@ -28,6 +28,14 @@ fun GalleryDetailScreen(
     onBack: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // Collect one-shot delete error events from ViewModel
+    LaunchedEffect(Unit) {
+        viewModel.errorEvent.collect { message ->
+            snackbarHostState.showSnackbar(message)
+        }
+    }
     
     // We need videos to display pager. If loading, show loader.
     when (val state = uiState) {
@@ -57,6 +65,7 @@ fun GalleryDetailScreen(
                             )
                         )
                     },
+                    snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
                     containerColor = Color.Black
                 ) { padding ->
                     Box(modifier = Modifier.padding(padding).fillMaxSize()) {

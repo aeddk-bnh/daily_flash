@@ -134,7 +134,7 @@ class CameraService(
             preview?.setSurfaceProvider(previewView?.surfaceProvider)
         }
 
-        return previewView!!
+        return requireNotNull(previewView) { "PreviewView is null — was getPreviewView() called before bindToLifecycle()?" }
     }
 
     /**

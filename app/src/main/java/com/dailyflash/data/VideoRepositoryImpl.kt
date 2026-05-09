@@ -9,6 +9,8 @@ import com.dailyflash.core.storage.VideoFile
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.time.LocalDate
 import java.time.YearMonth
@@ -90,8 +92,8 @@ class VideoRepositoryImpl(
     
     override suspend fun saveVideo(uri: Uri, date: LocalDate): Result<VideoFile> {
         return try {
-            // Read file data from URI
-            val data = readBytesFromUri(uri)
+            // Read file data from URI on IO thread
+            val data = withContext(Dispatchers.IO) { readBytesFromUri(uri) }
                 ?: return Result.failure(IllegalArgumentException("Cannot read video from URI"))
             
             // Save to storage via storage manager
@@ -110,8 +112,8 @@ class VideoRepositoryImpl(
             // Update cache with new entry
             videoCache[date] = videoFile
 
-            // If this came from a temporary local file, cleanup after successful copy.
-            cleanupIfLocalTempFile(uri)
+            // If this came from a temporary local file, cleanup after successful copy on IO thread.
+            withContext(Dispatchers.IO) { cleanupIfLocalTempFile(uri) }
             
             // Notify observers of cache change
             cacheVersion.value++

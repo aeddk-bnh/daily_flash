@@ -59,7 +59,10 @@ import coil.decode.VideoFrameDecoder
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.TextButton
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 
 @Composable
@@ -71,10 +74,18 @@ fun CalendarScreen(
     val uiState by viewModel.uiState.collectAsState()
     var selectedVideoUri by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<android.net.Uri?>(null) }
     var videoToDelete by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<VideoEntity?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    if (selectedVideoUri != null) {
+    // Collect one-shot delete error events from ViewModel
+    LaunchedEffect(Unit) {
+        viewModel.errorEvent.collect { message ->
+            snackbarHostState.showSnackbar(message)
+        }
+    }
+
+    selectedVideoUri?.let { uri ->
         com.dailyflash.presentation.components.VideoPlayerDialog(
-            videoUri = selectedVideoUri!!,
+            videoUri = uri,
             onDismiss = { selectedVideoUri = null }
         )
     }
@@ -101,6 +112,7 @@ fun CalendarScreen(
     }
 
     DailyFlashScaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             DailyFlashTopBar(
                 title = "DailyFlash",

@@ -5,8 +5,11 @@ import androidx.lifecycle.viewModelScope
 import com.dailyflash.domain.DeleteClipUseCase
 import com.dailyflash.domain.GetAllVideosUseCase
 import com.dailyflash.domain.VideoEntity
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
@@ -40,12 +43,16 @@ class GalleryViewModel(
         }
     }
     
+    /** One-shot error events for the UI to display as Snackbar. */
+    private val _errorEvent = MutableSharedFlow<String>(extraBufferCapacity = 1)
+    val errorEvent: SharedFlow<String> = _errorEvent.asSharedFlow()
+
     fun deleteVideo(video: VideoEntity) {
         viewModelScope.launch {
-            try {
-                deleteClipUseCase(video.id)
-            } catch (e: Exception) {
-                // error handling
+            val result = deleteClipUseCase(video.id)
+            if (result.isFailure) {
+                val msg = result.exceptionOrNull()?.message ?: "Failed to delete video"
+                _errorEvent.tryEmit(msg)
             }
         }
     }
